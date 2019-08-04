@@ -43,7 +43,7 @@
     </div>
 
     <div v-else>
-      
+      over
     </div>
 
   </transition>
@@ -88,7 +88,7 @@ export default {
       channel: null,
       hasEnded: false,
       hasAnswered: false,
-      nextQuestionIndex: 0,
+      currentQuestionIndex: 0,
       question: null,
       options: null,
       correctanswer: null,
@@ -119,6 +119,8 @@ export default {
     };
   },
   created() {
+    this.currentQuestionIndex = 0;
+    this.hasEnded = false;
     this.fetchData();
   },
   methods: {
@@ -134,7 +136,7 @@ export default {
       // Sets the data instance url variable to the current URL.
       this.url = window.location.href;
 
-      this.loadQuestion();
+      this.loadQuestion(this.currentQuestionIndex);
       //Initialize channel with current presenceid
       this.connectToChannel(this.idToConnect);
     },
@@ -152,7 +154,6 @@ export default {
         console.log('members', members);
         this.players += 1;
         this.secondplayer = true;
-
       });
       // Once a subscription has been made to a presence channel, an event is triggered with a members iterator.
       channel.bind("pusher:subscription_succeeded", members => {
@@ -168,8 +169,6 @@ export default {
           this.playerdata.two.id = members.myID;
           this.playerdata.two.userid = 2;
           this.userid = 2;
-
-          this.startTimer();
         }
       });
       // The pusher:member_removed is triggered when a user leaves a channel. We decrease the number of players by one and also set the secondplayer boolean to false.
@@ -177,19 +176,28 @@ export default {
         console.log('member', member);
         this.players -= 1;
         this.secondplayer = false;
-        if (member.count === 1) {
-        }
       });
       // This function receives new data from Pusher and updates the exisiting scores. This is what updates each player's score in realtime.
       channel.bind("client-send", data => {
         console.log('data', data);
-        this.timeLeft = data.timeLeft;
         if (this.userid === 1) {
           this.playerdata.two.score = data.data.two.score;
         } else if (this.userid === 2) {
           this.playerdata.one.score = data.data.one.score;
         }
       });    
+      channel.bind("client-has-answered", data => {
+        
+      });    
+      // channel.bind("client-question-update", data => {
+      //   console.log('question', data, 'lyrics', lyrics.length);
+      //   if(data.currentQuestionIndex == lyrics.length) {
+      //     this.endQuiz();
+      //   } else {
+      //     this.currentQuestionIndex = data.currentQuestion;
+      //     this.startTimer();  
+      //   }
+      // });    
     },
 
     getUniqueId() {
@@ -216,21 +224,25 @@ export default {
       this.hasAnswered = true;
       if (item.text === this.correctanswer) {
         if (this.userid === 1) {
-          this.playerdata.one.score += timeLeft;
+          this.playerdata.one.score += this.timeLeft;
         } else if (this.userid === 2) {
-          this.playerdata.two.score += timeLeft;
+          this.playerdata.two.score += this.timeLeft;
         }
       } 
       channel.trigger("client-send", { 
-        data: this.playerdata,
-        timeLeft: this.timeLeft
+        data: this.playerdata
       });
+      channel.trigger("client-has-answered", { 
+        hasAnswered: true
+      });
+
       this.count = 3;
       let countdown = setInterval(() => {
         this.count -= 1;
         if (this.count === 0) {
           clearInterval(countdown);
-          this.getNewQuestion();
+          this.currentQuestionIndex++;
+          this.loadQuestion(this.currentQuestionIndex);
           this.startTimer();
         }
       }, 1000);
@@ -239,14 +251,11 @@ export default {
     startTimer() {
       let channel = this.channel;
 
-      let timer = 10;
+      this.timeLeft = 10;
       let countdown = setInterval(() => {
-        timer--;
-        channel.trigger("client-send", { 
-          data: this.playerdata,
-          timeLeft: timer,
-        });
-        if(timer == 0) {
+        this.timeLeft--;
+        
+        if(this.timeLeft == 0) {
           clearInterval(countdown);
           this.timeOut();
         }
@@ -254,45 +263,61 @@ export default {
     },
 
     timeOut() {
+      let channel = this.channel;
       this.hasAnswered = true;
+      channel.trigger("client-has-answered", { 
+        hasAnswered: true
+      });
 
       this.count = 3;
       let countdown = setInterval(() => {
         this.count -= 1;
         if (this.count === 0) {
           clearInterval(countdown);
-          this.timeLeft = 10;
-          this.getNewQuestion();
+          this.currentQuestionIndex++;
+          this.loadQuestion(this.currentQuestionIndex);
+          this.startTimer();
         }
       }, 1000);
     },
 
-    getNewQuestion() {
-      // let question = this.getRandomQuestions(lyrics, 1);
+    // getNewQuestion() {
+    //   this.hasAnswered = false;
+    //   this.currentQuestionIndex++;
+    //   this.loadQuestion();
+
+    //   if(this.currentQuestionIndex == lyrics.length) {
+    //     this.endQuiz();
+    //   }
+    // },
+
+    loadQuestion(index) {
       this.hasAnswered = false;
-      this.nextQuestionIndex++;
-      this.loadQuestion();
 
-      if(this.nextQuestionIndex == lyrics.length) {
+      if(index == lyrics.length) {
         this.endQuiz();
+      } else {
+        let question = lyrics[index];
+        this.question = question;
+        this.options = question.options;
+        this.correctanswer = question.answer;
       }
-    },
 
-    loadQuestion() {
-      let question = lyrics[this.nextQuestionIndex];
-      this.question = question;
-      this.options = question.options;
-      this.correctanswer = question.answer;
     },
 
     endQuiz() {
-      this.quizEnded = true;
+      this.hasEnded = true;
+    }
+  },
+  watch: {
+    secondplayer: function(val) {
+      this.startTimer();
     }
   }
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
+
 <style scoped>
 .home {
   display: flex;
