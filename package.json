@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "core-js": "^2.6.5",
-    "gh-pages": "^2.1.0",
+    "gh-pages": "^2.0.1",
     "pusher-js": "^5.0.0",
     "vue": "^2.6.10",
     "vue-router": "^3.0.3",
