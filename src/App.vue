@@ -5,21 +5,19 @@
 </template>
 
 <style>
-  html {
-    background-color: #21D4FD;
-    background-image: linear-gradient(19deg, #21D4FD 0%, #B721FF 100%);
-  }
-  body {
-    background-color: #21D4FD;
-    background-image: linear-gradient(19deg, #21D4FD 0%, #B721FF 100%);
-    padding: 20px;
+  html, body {
+    height: 100%;
+    margin: 0;
   }
   #app {
-    height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-align: center;
     color: #fff;
+    background-color: #21D4FD;
+    background-image: linear-gradient(15deg, #21D4FD 0%, #B721FF 100%);
+    background-repeat: no-repeat;
+    min-height: 100%;
   }
   .fade-enter-active, .fade-leave-active {
     transition: opacity .5s

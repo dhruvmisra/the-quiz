@@ -8,6 +8,8 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "bootstrap": "^4.3.1",
+    "bootstrap-vue": "^2.0.0-rc.27",
     "core-js": "^2.6.5",
     "gh-pages": "^2.0.1",
     "pusher-js": "^5.0.0",

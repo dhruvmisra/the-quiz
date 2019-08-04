@@ -1,51 +1,89 @@
 <template>
   <transition name="fade">
-    <div v-if="!hasEnded">
+    <section class="outer" v-if="!hasEnded">
       <div class="home" v-if="!secondplayer">
-        <div class="inner">
-          <h1>Do you know your Hamilton Lyrics?</h1>
-          <p>Test your knowledge of Hamilton: An American Musical by guessing who sang what lyric.</p>
-          <p>Invite a second player by sending them this link {{url}}.</p>
-          <input type="text" placeholder="Enter ID to connect" v-model="idToConnect">
-          <button type="button" @click="connectToChannel(idToConnect)">Connect to #{{ idToConnect }}</button>
-        </div>
-      </div>
-      <div class="play" v-else-if="secondplayer">
-        <div>
-          <div class="container hamilton--header--text">
-            <h1>Do you know your Hamilton Lyrics?</h1>
-            <p>{{ timeLeft }}</p>
-            <div class="columns hamilton--inner">
-              <div class="column is-half left">
-                <p class="title">User 1</p>
-                <p class="subtitle">Total Score: {{playerdata.one.score}}</p>
-              </div>
-              <div v-if="secondplayer" class="column is-half right">
-                <p class="title">User 2</p>
-                <p class="subtitle">Total Score: {{playerdata.two.score}}</p>
-              </div>
+        <div class="container">
+          <h1 style="font-size: 10em">Q</h1>
+          <h4 class="display-4">The Quiz</h4>
+
+          <div class="row justify-content-around pt-5 my-5">
+            <div class="mb-5">
+              <p>Share this ID with your friend to connect</p>
+              <h1 class="text center">{{ idToShow }}</h1>
             </div>
 
-            <div class="hamilton--lyrics--text">
-              <p>{{question.lyric}}</p>
-              <div class="hamilton--answers">
-                <a
-                  :class="{ 'wronganswer': hasAnswered && !item.correct, 'correctanswer': hasAnswered && item.correct}"
-                  @click="checkAnswer(item)"
-                  v-for="item in options"
-                  :key="item.text"
-                >{{item.text}}</a>
-              </div>
+            <div>
+              <p>Or enter your friend's ID to start playing</p>
+              <input
+                class="form-control py-4 px-3 mx-auto"
+                type="number"
+                placeholder="Enter ID to connect"
+                v-model="idToConnect"
+              />
+              <button
+                class="btn btn-danger rounded-0 px-5 py-2 mt-3 w-100"
+                type="button"
+                :disabled="idToConnect == null"
+                @click="connectToChannel(idToConnect)"
+              >Connect</button>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div v-else>
-      over
-    </div>
+      <div class="play" v-else-if="secondplayer">
+        <div class="users-head">
+          <p class="mx-auto">The Quiz</p>
 
+          <div class="container row mx-auto">
+            <div class="mx-auto">
+              <div class="row">
+                <div class="user-img rounded-circle border"></div>
+                <h5 class="my-auto mx-3">User 1</h5>
+              </div>
+              <p class="mt-1 mb-3">Score: {{playerdata.one.score}}</p>
+            </div>
+
+            <div v-if="secondplayer" class="mx-auto">
+              <div class="row">
+                <div class="user-img rounded-circle border"></div>
+                <h5 class="my-auto mx-3">User 2</h5>
+              </div>
+              <p class="mt-1 mb-3">Score: {{playerdata.two.score}}</p>
+            </div>
+          </div>
+
+          <p class="text-center pb-1">Time: {{ timeLeft }}s</p>
+          <div class="progress w-100">
+            <div
+              class="progress-bar bg-warning"
+              role="progressbar"
+              :style="{width: this.timeLeft/10*100 + '%'}"
+              aria-valuenow="75"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+          </div>
+        </div>
+
+        <div class="container mt-4 pb-5">
+          <p class="question" :class="{'question-after': hasAnswered }">{{question.lyric}}?</p>
+          <div class="container mt-3">
+            <div class="row justify-content-center mx-auto">
+              <button
+                class="btn btn-option m-2 w-25 p-5"
+                :class="{ 'wronganswer': hasAnswered && !item.correct, 'correctanswer': hasAnswered && item.correct}"
+                @click="checkAnswer(item)"
+                v-for="item in options"
+                :key="item.text"
+              >{{item.text}}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div v-else>over</div>
   </transition>
 </template>
 
@@ -95,10 +133,11 @@ export default {
       timeLeft: 10,
       // This is used for a countdown timer
       count: null,
+      countdown: null,
       // Number of players in the game
       players: 1,
       // This checks if there's a second player, it becomes true when players = 2
-      secondplayer: false,
+      secondplayer: true,
       // This holds the player data for both players
       playerdata: {
         one: {
@@ -151,13 +190,13 @@ export default {
       let channel = this.channel;
       // The pusher:member_added event is triggered when a user joins a channel. We increase the number of players by one and also set the secondplayer boolean to true.
       channel.bind("pusher:member_added", members => {
-        console.log('members', members);
+        console.log("members", members);
         this.players += 1;
         this.secondplayer = true;
       });
       // Once a subscription has been made to a presence channel, an event is triggered with a members iterator.
       channel.bind("pusher:subscription_succeeded", members => {
-        console.log('subscription_succeeded', members);
+        console.log("subscription_succeeded", members);
         // This checks if its just one player online and sets them up as player one and the required info for the game
         if (members.count === 1 && !this.playerdata.one.id) {
           this.playerdata.one.id = members.myID;
@@ -173,36 +212,34 @@ export default {
       });
       // The pusher:member_removed is triggered when a user leaves a channel. We decrease the number of players by one and also set the secondplayer boolean to false.
       channel.bind("pusher:member_removed", member => {
-        console.log('member', member);
+        console.log("member", member);
         this.players -= 1;
         this.secondplayer = false;
       });
       // This function receives new data from Pusher and updates the exisiting scores. This is what updates each player's score in realtime.
       channel.bind("client-send", data => {
-        console.log('data', data);
+        console.log("data", data);
         if (this.userid === 1) {
           this.playerdata.two.score = data.data.two.score;
         } else if (this.userid === 2) {
           this.playerdata.one.score = data.data.one.score;
         }
-      });    
-      channel.bind("client-has-answered", data => {
-        
-      });    
+      });
+      channel.bind("client-has-answered", data => {});
       // channel.bind("client-question-update", data => {
       //   console.log('question', data, 'lyrics', lyrics.length);
       //   if(data.currentQuestionIndex == lyrics.length) {
       //     this.endQuiz();
       //   } else {
       //     this.currentQuestionIndex = data.currentQuestion;
-      //     this.startTimer();  
+      //     this.startTimer();
       //   }
-      // });    
+      // });
     },
 
     getUniqueId() {
       return (
-        "id=" + Math.floor((Math.random()*10000000000) + 100000)%500000
+        "id=" + (Math.floor(Math.random() * 10000000000 + 100000) % 500000)
         // Math.random().toString(36).substr(2, 8)
       );
     },
@@ -220,19 +257,20 @@ export default {
 
     checkAnswer(item) {
       let channel = this.channel;
-
       this.hasAnswered = true;
+      clearInterval(this.countdown);
+
       if (item.text === this.correctanswer) {
         if (this.userid === 1) {
           this.playerdata.one.score += this.timeLeft;
         } else if (this.userid === 2) {
           this.playerdata.two.score += this.timeLeft;
         }
-      } 
-      channel.trigger("client-send", { 
+      }
+      channel.trigger("client-send", {
         data: this.playerdata
       });
-      channel.trigger("client-has-answered", { 
+      channel.trigger("client-has-answered", {
         hasAnswered: true
       });
 
@@ -252,11 +290,11 @@ export default {
       let channel = this.channel;
 
       this.timeLeft = 10;
-      let countdown = setInterval(() => {
+      this.countdown = setInterval(() => {
         this.timeLeft--;
-        
-        if(this.timeLeft == 0) {
-          clearInterval(countdown);
+
+        if (this.timeLeft == 0) {
+          clearInterval(this.countdown);
           this.timeOut();
         }
       }, 1000);
@@ -265,15 +303,15 @@ export default {
     timeOut() {
       let channel = this.channel;
       this.hasAnswered = true;
-      channel.trigger("client-has-answered", { 
+      channel.trigger("client-has-answered", {
         hasAnswered: true
       });
 
       this.count = 3;
-      let countdown = setInterval(() => {
+      this.countdown = setInterval(() => {
         this.count -= 1;
         if (this.count === 0) {
-          clearInterval(countdown);
+          clearInterval(this.countdown);
           this.currentQuestionIndex++;
           this.loadQuestion(this.currentQuestionIndex);
           this.startTimer();
@@ -294,7 +332,7 @@ export default {
     loadQuestion(index) {
       this.hasAnswered = false;
 
-      if(index == lyrics.length) {
+      if (index == lyrics.length) {
         this.endQuiz();
       } else {
         let question = lyrics[index];
@@ -302,7 +340,6 @@ export default {
         this.options = question.options;
         this.correctanswer = question.answer;
       }
-
     },
 
     endQuiz() {
@@ -313,26 +350,76 @@ export default {
     secondplayer: function(val) {
       this.startTimer();
     }
+  },
+  computed: {
+    idToShow() {
+      return this.presenceid.substring(3, this.presenceid.length);
+    }
   }
 };
 </script>
 
 
 <style scoped>
+.outer {
+  min-height: 100%;
+}
 .home {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  height: fit-content;
 }
-h1 {
-  font-size: 3rem;
-  font-weight: bold;
+.home input {
+  font-size: 1.2em;
+  box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.2);
 }
-p {
-  font-size: 1.5rem;
-  margin: 0 0 20px 0;
+.home input::placeholder {
+  color: rgb(200, 200, 200);
 }
+.home button {
+  font-size: 1.6em;
+  background-color: red;
+  box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+.users-head {
+  background: rgb(0, 0, 0, 0.4);
+  /* background: linear-gradient(180deg, rgb(63, 0, 90) 0%, rgba(41, 7, 56, 0) 100%); */
+  padding-top: 30px;
+}
+.user-img {
+  height: 50px;
+  width: 50px;
+  margin: 10px auto;
+}
+
+.question {
+  font-size: 2.5em;
+  font-weight: 100;
+  transition: font-size ease-in 0.3s;
+}
+.question-after {
+  font-size: 2em;
+}
+.btn-option {
+  min-width: 400px;
+  background-color: rgba(255, 255, 255, 0.5);
+  font-size: 1.2em;
+  color: grey;
+  transition: transform ease-in 0.1s;
+}
+.btn-option:hover {
+  box-shadow: 2px 2px 20px rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 1024px) {
+  .btn-option {
+    min-width: 100%;
+  }
+}
+
 .play--button {
   background-color: white;
   color: #7fd4d3;
@@ -359,17 +446,7 @@ p {
 .fade-leave-to {
   opacity: 0;
 }
-a {
-  color: #fff;
-}
-p {
-  color: #fff;
-}
-h1 {
-  font-size: 3rem;
-  font-weight: bold;
-  text-align: center;
-}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s;
@@ -377,67 +454,23 @@ h1 {
 .fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
   opacity: 0;
 }
-.play--button {
-  background-color: white;
-  color: #7fd4d3;
-  font-weight: bold;
-  border-radius: 20px;
-  letter-spacing: 1px;
-  padding: 20px;
-  transition: all 0.3s ease;
-  text-shadow: 0 1px 3px rgba(36, 180, 126, 0.4);
-  text-transform: uppercase;
-  box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 5;
-}
-.play--button:hover {
-  background-color: white;
-  color: #7fd4d3;
-  transform: translateY(-1px);
-  box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
-}
-.hamilton--header--text {
-  margin-top: 50px;
-}
-.hamilton--inner {
-  margin-top: 20px;
-}
-.hamilton--inner .left {
-  text-align: left;
-}
-.hamilton--inner .right {
-  text-align: right;
-}
+
 .title {
   font-weight: bold;
 }
-.hamilton--lyrics--text {
-  width: 600px;
-  margin: 0 auto;
-}
-.hamilton--lyrics--text p {
-  font-weight: bold;
-}
-.hamilton--answers a {
-  display: block;
-  border: 3px solid white;
-  border-radius: 50px;
-  margin: 20px auto;
-  width: 500px;
-  padding: 10px;
-}
+
 .wronganswer {
-  background-color: #ec6969;
-  border: none !important;
-  opacity: 0.4;
+  color: white;
+  background-color: #f05757;
+  opacity: 0.5;
   transition: background-color 0.5s ease;
 }
 .correctanswer {
+  color: white;
   background-color: #00c4a7;
-  border: none !important;
   transition: background-color 0.5s ease;
+}
+.wronganswer:hover, .correctanswer:hover {
+  color: white;
 }
 </style>
