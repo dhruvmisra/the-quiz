@@ -3,16 +3,18 @@
     <section class="outer" v-if="!hasEnded">
       <div class="home" v-if="!secondplayer">
         <div class="container">
-          <h1 style="font-size: 10em">Q</h1>
-          <h4 class="display-4">The Quiz</h4>
+          <div class="logo">            
+            <h1 style="font-size: 10em">Q</h1>
+            <h4 class="display-4">The Quiz</h4>
+          </div>
 
           <div class="row justify-content-around pt-5 my-5">
-            <div class="mb-5">
+            <div class="idDiv mb-5">
               <p>Share this ID with your friend to connect</p>
               <h1 class="text center">{{ idToShow }}</h1>
             </div>
 
-            <div>
+            <div class="inputDiv">
               <p>Or enter your friend's ID to start playing</p>
               <input
                 class="form-control py-4 px-3 mx-auto"
@@ -67,53 +69,144 @@
         </div>
 
         <div class="container mt-4 pb-5">
-          <p class="question" :class="{'question-after': hasAnswered }">{{question.lyric}}?</p>
+          <p class="question" :class="{'question-after': hasAnswered }">{{question.ques}}?</p>
           <div class="container mt-3">
-            <div class="row justify-content-center mx-auto">
-              <button
-                class="btn btn-option m-2 w-25 p-5"
-                :class="{ 'wronganswer': hasAnswered && !item.correct, 'correctanswer': hasAnswered && item.correct}"
-                @click="checkAnswer(item)"
-                v-for="item in options"
-                :key="item.text"
-              >{{item.text}}</button>
-            </div>
+            <transition name="fade">
+              <div class="options row justify-content-center mx-auto" v-if="show == true">
+                <button
+                  class="btn btn-option m-2 w-25 p-5"
+                  :class="{ 'wronganswer': hasAnswered && !item.correct, 'correctanswer': hasAnswered && item.correct}"
+                  @click="checkAnswer(item)"
+                  v-for="item in options"
+                  :key="item.text"
+                >{{item.text}}</button>
+              </div>
+            </transition>
           </div>
         </div>
       </div>
     </section>
 
-    <div v-else>over</div>
+    <section v-else>
+      <div class="container p-5 text-dark">
+        <div class="card p-5">
+          <div class="card-body">
+            <h1 class="text-center text-success my-4 pb-5">User {{ winner.userid }} wins!</h1>
+            <div class="winners row justify-content-center">
+              <div class="p-5" :class="{ 'winner': winner.userid == 1 }">
+                <div class="user-img rounded-circle border"></div>
+                <h5 class="my-auto mx-3">User 1</h5>
+                <p class="mt-1 mb-3">Final Score: {{playerdata.one.score}}</p>
+              </div>
+
+              <h2 class="mx-4 my-auto">VS</h2>
+
+              <div class="p-5" :class="{ 'winner': winner.userid == 2 }">
+                <div class="user-img rounded-circle border"></div>
+                <h5 class="my-auto mx-3">User 2</h5>
+                <p class="mt-1 mb-3">Final Score: {{playerdata.two.score}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </transition>
 </template>
 
 <script>
 // Import ChannelDetails component created above
 import ChannelDetails from "@/components/ChannelDetails";
-// An array that holds the lyrics questions and their correct answers. All questions can be seen here https://gist.github.com/yomete/2d851c2adc008a9763a0db9f85879083
-const lyrics = [
+
+const questions = [
   {
-    lyric:
-      "When he was ten his father split, full of it, debt-ridden. Two years later, see Alex and his mother bed-ridden. Half-dead sittin' in their own sick, the scent thick",
+    ques:
+      "Which is the World's Largest desert?",
     options: [
-      { text: "Aaron Burr", correct: false },
-      { text: "James Madison", correct: false },
-      { text: "John Laurens", correct: false },
-      { text: "Eliza Hamilton", correct: true }
+      { text: "Thar", correct: false },
+      { text: "Kalaharin", correct: false },
+      { text: "Sahara", correct: true },
+      { text: "Sonoran", correct: false }
     ],
-    answer: "Eliza Hamilton"
+    answer: "Sahara"
   },
   {
-    lyric:
-      "I am sailing off to London. I’m accompanied by someone who always pays. I have found a wealthy husband. Who will keep me in comfort for all my days. He is not a lot of fun, but there’s no one",
+    ques:
+      "Country that has the highest in Barley Production?",
     options: [
-      { text: "Eliza", correct: false },
-      { text: "Peggy", correct: false },
-      { text: "Angelica", correct: true },
-      { text: "Maria", correct: false }
+      { text: "China", correct: false },
+      { text: "India", correct: false },
+      { text: "France", correct: false },
+      { text: "Russia", correct: true }
     ],
-    answer: "Angelica"
-  }
+    answer: "Russia"
+  },
+  {
+    ques:
+      "The metal whose salts are sensitive to light is?",
+    options: [
+      { text: "Zinc", correct: false },
+      { text: "Silver", correct: true },
+      { text: "Copper", correct: false },
+      { text: "Aluminium", correct: false }
+    ],
+    answer: "Silver"
+  },
+  {
+    ques:
+      "Mount Everest is located in?",
+    options: [
+      { text: "Nepal", correct: true },
+      { text: "India", correct: false },
+      { text: "Tibet", correct: false },
+      { text: "China", correct: false }
+    ],
+    answer: "Nepal"
+  },
+  {
+    ques:
+      "Which soil is suitable for agriculture?",
+    options: [
+      { text: "Red soil", correct: false },
+      { text: "Sand", correct: false },
+      { text: "Black soil", correct: false },
+      { text: "Peaty soil", correct: true }
+    ],
+    answer: "Peaty soil"
+  },
+  {
+    ques:
+      "The device used for measuring altitudes is?",
+    options: [
+      { text: "altimeter", correct: true },
+      { text: "ammeter", correct: false },
+      { text: "audiometer", correct: false },
+      { text: "galvanometer", correct: false }
+    ],
+    answer: "altimeter"
+  },
+  {
+    ques:
+      "The Gate way of India is?",
+    options: [
+      { text: "Chennai", correct: false },
+      { text: "Mumbai", correct: true },
+      { text: "Kolkata", correct: false },
+      { text: "New Delhi", correct: false }
+    ],
+    answer: "Mumbai"
+  },
+  {
+    ques:
+      "The chief ore of Aluminium is?",
+    options: [
+      { text: "Iron", correct: false },
+      { text: "Cryolite", correct: false },
+      { text: "Bauxite", correct: true },
+      { text: "Haematite", correct: false }
+    ],
+    answer: "Bauxite"
+  },
 ];
 
 export default {
@@ -129,6 +222,7 @@ export default {
       currentQuestionIndex: 0,
       question: null,
       options: null,
+      show: false,
       correctanswer: null,
       timeLeft: 10,
       // This is used for a countdown timer
@@ -136,9 +230,7 @@ export default {
       countdown: null,
       // Number of players in the game
       players: 1,
-      // This checks if there's a second player, it becomes true when players = 2
       secondplayer: true,
-      // This holds the player data for both players
       playerdata: {
         one: {
           id: null,
@@ -151,9 +243,7 @@ export default {
           userid: null
         }
       },
-      // This holds the userid for the current player
       userid: null,
-      // This holds the current URL of the game
       url: null
     };
   },
@@ -161,12 +251,13 @@ export default {
     this.currentQuestionIndex = 0;
     this.hasEnded = false;
     this.fetchData();
+    this.showOptions(); 
   },
   methods: {
     fetchData() {
       // Sets the data instance presenceid variable to the result of the getUniqueId function
       this.presenceid = this.getUniqueId();
-      // This checks if there's no presence ID in the URL via the checkPresenceID function and appends the presenceid to the current URL so that we can have the URL end with a parameter like this https://hamilton-lyrics.firebaseapp.com/#/?id=agbew0gz
+      // This checks if there's no presence ID in the URL via the checkPresenceID function and appends the presenceid to the current URL so that we can have the URL end with a parameter like this https://hamilton-questions.firebaseapp.com/#/?id=agbew0gz
       if (!this.checkPresenceID()) {
         let separator = window.location.href.indexOf("?") === -1 ? "?" : "&";
         window.location.href =
@@ -226,15 +317,7 @@ export default {
         }
       });
       channel.bind("client-has-answered", data => {});
-      // channel.bind("client-question-update", data => {
-      //   console.log('question', data, 'lyrics', lyrics.length);
-      //   if(data.currentQuestionIndex == lyrics.length) {
-      //     this.endQuiz();
-      //   } else {
-      //     this.currentQuestionIndex = data.currentQuestion;
-      //     this.startTimer();
-      //   }
-      // });
+
     },
 
     getUniqueId() {
@@ -281,23 +364,24 @@ export default {
           clearInterval(countdown);
           this.currentQuestionIndex++;
           this.loadQuestion(this.currentQuestionIndex);
-          this.startTimer();
+          this.show = false;
+          this.showOptions();
         }
       }, 1000);
     },
 
     startTimer() {
-      let channel = this.channel;
+        let channel = this.channel;
 
-      this.timeLeft = 10;
-      this.countdown = setInterval(() => {
-        this.timeLeft--;
+        this.timeLeft = 10;
+        this.countdown = setInterval(() => {
+          this.timeLeft--;
 
-        if (this.timeLeft == 0) {
-          clearInterval(this.countdown);
-          this.timeOut();
-        }
-      }, 1000);
+          if (this.timeLeft == 0) {
+            clearInterval(this.countdown);
+            this.timeOut();
+          }
+        }, 1000);
     },
 
     timeOut() {
@@ -314,7 +398,8 @@ export default {
           clearInterval(this.countdown);
           this.currentQuestionIndex++;
           this.loadQuestion(this.currentQuestionIndex);
-          this.startTimer();
+          this.show = false;
+          this.showOptions();
         }
       }, 1000);
     },
@@ -324,7 +409,7 @@ export default {
     //   this.currentQuestionIndex++;
     //   this.loadQuestion();
 
-    //   if(this.currentQuestionIndex == lyrics.length) {
+    //   if(this.currentQuestionIndex == questions.length) {
     //     this.endQuiz();
     //   }
     // },
@@ -332,14 +417,22 @@ export default {
     loadQuestion(index) {
       this.hasAnswered = false;
 
-      if (index == lyrics.length) {
+      if (index == questions.length) {
         this.endQuiz();
       } else {
-        let question = lyrics[index];
+        let question = questions[index];
         this.question = question;
         this.options = question.options;
         this.correctanswer = question.answer;
       }
+    },
+
+    showOptions() {
+      setTimeout(() => {
+        this.show = true;
+        this.startTimer();
+      }, 1000);
+
     },
 
     endQuiz() {
@@ -348,12 +441,19 @@ export default {
   },
   watch: {
     secondplayer: function(val) {
-      this.startTimer();
+      this.showOptions();
     }
   },
   computed: {
     idToShow() {
       return this.presenceid.substring(3, this.presenceid.length);
+    },
+    winner() {
+      if (this.playerdata.one.score > this.playerdata.two.score) {
+        return this.playerdata.one;
+      } else {
+        return this.playerdata.two;
+      }
     }
   }
 };
@@ -383,6 +483,28 @@ export default {
   box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.3);
 }
 
+.logo {
+  animation: fade 0.8s ease-out forwards;
+}
+@keyframes fade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.idDiv {
+  opacity: 0;
+  animation: fade 0.8s ease-out forwards 0.3s;
+}
+.inputDiv {
+  opacity: 0;
+  animation: fade 0.8s ease-out forwards 0.5s;
+}
+
+
+
 .users-head {
   background: rgb(0, 0, 0, 0.4);
   /* background: linear-gradient(180deg, rgb(63, 0, 90) 0%, rgba(41, 7, 56, 0) 100%); */
@@ -391,14 +513,18 @@ export default {
 .user-img {
   height: 50px;
   width: 50px;
+  background-color: white;
   margin: 10px auto;
 }
 
 .question {
   font-size: 2.5em;
   font-weight: 100;
+  opacity: 0;
   transition: font-size ease-in 0.3s;
+  animation: fade 0.8s ease-out forwards 0.2s;
 }
+
 .question-after {
   font-size: 2em;
 }
@@ -417,6 +543,28 @@ export default {
 @media (max-width: 1024px) {
   .btn-option {
     min-width: 100%;
+  }
+}
+
+.winners .user-img {
+  height: 100px;
+  width: 100px;
+}
+
+.winner {
+  transform: scale(1.1);
+  background-color: rgb(205, 235, 255);
+  animation: winner 1.5s ease-in-out infinite;
+}
+@keyframes winner {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
@@ -470,7 +618,8 @@ export default {
   background-color: #00c4a7;
   transition: background-color 0.5s ease;
 }
-.wronganswer:hover, .correctanswer:hover {
+.wronganswer:hover,
+.correctanswer:hover {
   color: white;
 }
 </style>
