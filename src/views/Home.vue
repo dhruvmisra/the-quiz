@@ -69,7 +69,7 @@
         </div>
 
         <div class="container mt-4 pb-5">
-          <p class="question" :class="{'question-after': hasAnswered }">{{question.ques}}?</p>
+          <p class="question" :class="{'question-after': hasAnswered }">{{question.ques}}</p>
           <div class="container mt-3">
             <transition name="fade">
               <div class="options row justify-content-center mx-auto" v-if="show == true">
@@ -115,7 +115,6 @@
 </template>
 
 <script>
-// Import ChannelDetails component created above
 import ChannelDetails from "@/components/ChannelDetails";
 
 const questions = [
@@ -213,24 +212,24 @@ export default {
   name: "home",
   data() {
     return {
-      // This holds the current presence-id
       presenceid: null,
       idToConnect: null,
       channel: null,
       hasEnded: false,
+
       hasAnswered: false,
       currentQuestionIndex: 0,
       question: null,
       options: null,
       show: false,
       correctanswer: null,
+      
       timeLeft: 10,
-      // This is used for a countdown timer
       count: null,
       countdown: null,
-      // Number of players in the game
+
       players: 1,
-      secondplayer: true,
+      secondplayer: false,
       playerdata: {
         one: {
           id: null,
@@ -251,7 +250,6 @@ export default {
     this.currentQuestionIndex = 0;
     this.hasEnded = false;
     this.fetchData();
-    this.showOptions(); 
   },
   methods: {
     fetchData() {
@@ -289,15 +287,15 @@ export default {
       channel.bind("pusher:subscription_succeeded", members => {
         console.log("subscription_succeeded", members);
         // This checks if its just one player online and sets them up as player one and the required info for the game
+        this.playerdata.one.userid = 1;
+        this.playerdata.two.userid = 2;
         if (members.count === 1 && !this.playerdata.one.id) {
           this.playerdata.one.id = members.myID;
-          this.playerdata.one.userid = 1;
           this.userid = 1;
           // This checks if there's a player online already and sets the new player as player two.
         } else if (members.count === 2) {
           this.secondplayer = true;
           this.playerdata.two.id = members.myID;
-          this.playerdata.two.userid = 2;
           this.userid = 2;
         }
       });
@@ -561,7 +559,7 @@ export default {
     transform: scale(1);
   }
   50% {
-    transform: scale(1.1);
+    transform: scale(1.05);
   }
   100% {
     transform: scale(1);
